@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ATAS Market Research | Ultra Precision</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0b0e11;
+            --bg-secondary: #1e2329;
+            --bg-tertiary: #2b3139;
+            --text-primary: #eaecef;
+            --text-secondary: #848e9c;
+            --accent-green: #00c076;
+            --accent-red: #f6465d;
+            --accent-yellow: #f0b90b;
+            --accent-blue: #1e88e5;
+            --border-color: #2b3139;
+            --glass-bg: rgba(30, 35, 41, 0.85);
+            
+            /* Sidebar Widths */
+            --side-collapsed: 36px;
+            --side-left-expanded: 280px;
+            --side-right-expanded: 240px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--bg-tertiary); border-radius: 3px; }
+
+        /* Header */
+        .header {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 0 20px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 100;
+        }
+
+        .logo { font-size: 16px; font-weight: 700; color: var(--accent-yellow); display: flex; align-items: center; gap: 10px; }
+        .logo span { color: var(--text-secondary); font-weight: 400; font-size: 12px; }
+
+        .header-controls { display: flex; align-items: center; gap: 15px; }
+
+        .timeframes { display: flex; gap: 2px; }
+        .tf-btn {
+            background: transparent; border: none; color: var(--text-secondary);
+            padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 500; transition: 0.2s;
+        }
+        .tf-btn:hover { color: var(--text-primary); background: var(--bg-tertiary); }
+        .tf-btn.active { color: var(--accent-yellow); background: rgba(240, 185, 11, 0.1); }
+
+        .quick-select { display: flex; gap: 6px; margin-left: 15px; }
+        .pill {
+            background: var(--bg-tertiary); padding: 3px 10px; border-radius: 20px;
+            font-size: 11px; font-weight: 600; cursor: pointer; transition: 0.2s;
+        }
+        .pill:hover, .pill.active { background: var(--accent-yellow); color: #000; }
+
+        /* Main Layout */
+        .main-layout { display: flex; flex: 1; overflow: hidden; position: relative; }
+
+        /* --- HOVER EXPAND SIDEBARS (The Magic) --- */
+        .sidebar {
+            background: var(--bg-secondary);
+            height: 100%;
+            position: relative;
+            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+            z-index: 50;
+            flex-shrink: 0;
+        }
+
+        .sidebar.left {
+            width: var(--side-collapsed);
+            border-right: 1px solid var(--border-color);
+        }
+        .sidebar.left:hover { width: var(--side-left-expanded); }
+
+        .sidebar.right {
+            width: var(--side-collapsed);
+            border-left: 1px solid var(--border-color);
+        }
+        .sidebar.right:hover { width: var(--side-right-expanded); }
+
+        /* Glowing edge to indicate hoverable area */
+        .sidebar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            width: 2px;
+            height: 100%;
+            background: var(--accent-yellow);
+            opacity: 0.2;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+        .sidebar.left::after { right: 0; }
+        .sidebar.right::after { left: 0; }
+        .sidebar:hover::after { opacity: 0; }
+
+        /* Inner content wrapper to prevent squishing */
+        .sidebar-inner {
+            position: absolute;
+            top: 0;
+            height: 100%;
+            overflow-y: auto;
+            opacity: 0;
+            transition: opacity 0.3s ease 0.15s; /* Delay fade-in until expanded */
+            pointer-events: none;
+        }
+        .sidebar:hover .sidebar-inner {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .sidebar.left .sidebar-inner { left: 0; width: var(--side-left-expanded); padding: 15px; }
+        .sidebar.right .sidebar-inner { right: 0; width: var(--side-right-expanded); padding: 15px; }
+
+        /* Collapsed Icons (Visible when not hovered) */
+        .collapsed-icon {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: var(--text-secondary);
+            font-size: 16px;
+            transition: opacity 0.2s;
+            pointer-events: none;
+        }
+        .sidebar:hover .collapsed-icon { opacity: 0; }
+
+        .sidebar-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .indicator-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+        }
+        .sidebar.right .indicator-grid { grid-template-columns: 1fr; }
+
+        .ind-btn {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 6px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: 0.2s;
+            white-space: nowrap;
+        }
+        .ind-btn:hover { border-color: var(--accent-blue); background: rgba(30, 136, 229, 0.1); }
+        .ind-btn .emoji { font-size: 13px; }
+
+        /* Chart Area */
+        .chart-area {
+            flex: 1;
+            position: relative;
+            background: 
+                linear-gradient(rgba(43, 49, 57, 0.2) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(43, 49, 57, 0.2) 1px, transparent 1px);
+            background-size: 40px 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .calibrating-overlay { text-align: center; animation: pulse 3s infinite; }
+        .calibrating-overlay h2 { font-size: 20px; font-weight: 300; color: var(--text-secondary); margin-bottom: 8px; }
+        .calibrating-overlay h1 {
+            font-size: 28px; font-weight: 700;
+            background: linear-gradient(90deg, var(--accent-blue), var(--accent-green));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.6; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.02); }
+            100% { opacity: 0.6; transform: scale(1); }
+        }
+
+        /* Bottom Toolbar */
+        .bottom-toolbar {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 8px 15px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            z-index: 10;
+        }
+
+        .replay-btn {
+            background: var(--bg-tertiary); border: none; color: var(--text-primary);
+            width: 28px; height: 28px; border-radius: 50%; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; transition: 0.2s; font-size: 12px;
+        }
+        .replay-btn:hover { background: var(--accent-blue); }
+        .replay-btn.play { background: var(--accent-green); color: #000; }
+
+        .speed-selector { display: flex; gap: 4px; border-left: 1px solid var(--border-color); border-right: 1px solid var(--border-color); padding: 0 10px; }
+        .speed-btn { background: transparent; border: none; color: var(--text-secondary); font-size: 11px; padding: 4px 6px; border-radius: 4px; cursor: pointer; }
+        .speed-btn.active { background: var(--accent-yellow); color: #000; font-weight: 600; }
+
+        /* FRVP Floating Panel */
+        .frvp-panel {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            width: 260px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            overflow: hidden;
+            z-index: 20;
+        }
+        .frvp-header {
+            padding: 12px 15px; border-bottom: 1px solid var(--border-color);
+            display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 13px;
+        }
+        .frvp-body { padding: 15px; display: flex; flex-direction: column; gap: 10px; }
+        .input-group { display: flex; flex-direction: column; gap: 4px; }
+        .input-group label { font-size: 11px; color: var(--text-secondary); }
+        .input-group input, .input-group select {
+            background: var(--bg-tertiary); border: 1px solid var(--border-color); color: var(--text-primary);
+            padding: 6px 8px; border-radius: 4px; outline: none; font-size: 12px;
+        }
+        .btn-row { display: flex; gap: 8px; margin-top: 8px; }
+        .btn { flex: 1; padding: 8px; border: none; border-radius: 4px; font-weight: 600; cursor: pointer; font-size: 12px; transition: 0.2s; }
+        .btn-cancel { background: var(--bg-tertiary); color: var(--text-secondary); }
+        .btn-ok { background: var(--accent-blue); color: #fff; }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header class="header">
+        <div style="display: flex; align-items: center;">
+            <div class="logo">ATAS Market Research <span>| Ultra Precision</span></div>
+            <div class="quick-select">
+                <div class="pill active">BTC</div>
+                <div class="pill">ETH</div>
+                <div class="pill">SOL</div>
+                <div class="pill">XRP</div>
+                <div class="pill">BNB</div>
+                <div class="pill">DOGE</div>
+            </div>
+        </div>
+        
+        <div class="header-controls">
+            <div class="timeframes">
+                <button class="tf-btn">1m</button>
+                <button class="tf-btn">5m</button>
+                <button class="tf-btn">15m</button>
+                <button class="tf-btn active">1h</button>
+                <button class="tf-btn">2h</button>
+                <button class="tf-btn">4h</button>
+                <button class="tf-btn">1d</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Layout -->
+    <div class="main-layout">
+        
+        <!-- Left Sidebar: Order Flow -->
+        <aside class="sidebar left">
+            <div class="collapsed-icon">⚡</div>
+            <div class="sidebar-inner">
+                <div class="sidebar-title">Order Flow & Indicators</div>
+                <div class="indicator-grid">
+                    <button class="ind-btn"><span class="emoji">⚡</span> IMB</button>
+                    <button class="ind-btn"><span class="emoji">🔗</span> STACKED</button>
+                    <button class="ind-btn"><span class="emoji">🌡️</span> HEAT</button>
+                    <button class="ind-btn"><span class="emoji">Δ</span> DELTA</button>
+                    <button class="ind-btn"><span class="emoji">🐋</span> WHALE</button>
+                    <button class="ind-btn"><span class="emoji">📊</span> SIZE DELTA</button>
+                    <button class="ind-btn"><span class="emoji">📈</span> VOL / TICK</button>
+                    <button class="ind-btn"><span class="emoji">🧱</span> DOM LIQ</button>
+                    <button class="ind-btn"><span class="emoji">📊</span> DOM PROF</button>
+                    <button class="ind-btn"><span class="emoji">🧠</span> MMS SCORE</button>
+                    <button class="ind-btn"><span class="emoji">📰</span> NEWS</button>
+                    <button class="ind-btn"><span class="emoji">🧲</span> LIQ POOL</button>
+                    <button class="ind-btn"><span class="emoji">🧊</span> ICEBERG</button>
+                    <button class="ind-btn"><span class="emoji">⚡</span> PACE</button>
+                    <button class="ind-btn"><span class="emoji">🪡</span> WICK-Δ</button>
+                    <button class="ind-btn"><span class="emoji">☠️</span> REKT</button>
+                    <button class="ind-btn"><span class="emoji">🟧</span> FVG</button>
+                    <button class="ind-btn"><span class="emoji">📏</span> VWBA</button>
+                    <button class="ind-btn"><span class="emoji">✨</span> GLOW</button>
+                    <button class="ind-btn"><span class="emoji">📊</span> FOOT</button>
+                    <button class="ind-btn"><span class="emoji">📑</span> STATS</button>
+                    <button class="ind-btn"><span class="emoji">📈</span> LINE</button>
+                    <button class="ind-btn"><span class="emoji">🎯</span> SNR</button>
+                    <button class="ind-btn"><span class="emoji">📐</span> SK SYSTEM</button>
+                    <button class="ind-btn"><span class="emoji">🌊</span> ELLIOTT WAVE</button>
+                    <button class="ind-btn"><span class="emoji">🏛️</span> WYCKOFF MODEL</button>
+                    <button class="ind-btn"><span class="emoji">🏦</span> SMC SYSTEM</button>
+                    <button class="ind-btn"><span class="emoji">🎯</span> CRT SETUP</button>
+                    <button class="ind-btn"><span class="emoji">📈</span> VWAP</button>
+                    <button class="ind-btn"><span class="emoji">🌐</span> SESSIONS</button>
+                    <button class="ind-btn"><span class="emoji">📊</span> VOL Δ∑ CVD</button>
+                    <button class="ind-btn"><span class="emoji">⚪</span> D-OPEN</button>
+                    <button class="ind-btn"><span class="emoji">📊</span> D-TPO</button>
+                    <button class="ind-btn"><span class="emoji">📊</span> D-VOL</button>
+                    <button class="ind-btn"><span class="emoji">🎯</span> NAKED POC</button>
+                    <button class="ind-btn"><span class="emoji">🟡</span> ABS ZONE</button>
+                    <button class="ind-btn"><span class="emoji">🟢</span> HV BUY</button>
+                    <button class="ind-btn"><span class="emoji">🔴</span> HV SELL</button>
+                    <button class="ind-btn"><span class="emoji">📊</span> PIVOTS</button>
+                    <button class="ind-btn"><span class="emoji">📈</span> AVWAP</button>
+                    <button class="ind-btn"><span class="emoji">⚠️</span> SPOOF</button>
+                    <button class="ind-btn"><span class="emoji">📈</span> OI (MAIN)</button>
+                    <button class="ind-btn"><span class="emoji">📊</span> OI PANEL</button>
+                    <button class="ind-btn"><span class="emoji">🗺️</span> MTF HEAT</button>
+                    <button class="ind-btn"><span class="emoji">🔷</span> FP SHAPE</button>
+                    <button class="ind-btn"><span class="emoji">📊</span> BBA DELTA</button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Chart Area -->
+        <main class="chart-area">
+            <div class="calibrating-overlay">
+                <h2>Calibrating Market...</h2>
+                <h1>ULTRA PRECISION ENGINE...</h1>
+            </div>
+
+            <!-- Bottom Replay Toolbar -->
+            <div class="bottom-toolbar">
+                <button class="replay-btn">◀</button>
+                <button class="replay-btn play">▶</button>
+                <button class="replay-btn">▶️</button>
+                
+                <div class="speed-selector">
+                    <button class="speed-btn">1s</button>
+                    <button class="speed-btn active">0.5s</button>
+                    <button class="speed-btn">0.2s</button>
+                    <button class="speed-btn">0.1s</button>
+                </div>
+
+                <button class="replay-btn" title="Close">✖</button>
+                <span style="color: var(--text-secondary); font-size: 12px;">0.00 FRVP</span>
+            </div>
+
+            <!-- FRVP Settings Panel -->
+            <div class="frvp-panel">
+                <div class="frvp-header">
+                    <span>FRVP × Inputs</span>
+                    <span style="cursor: pointer; color: var(--text-secondary);">✖</span>
+                </div>
+                <div class="frvp-body">
+                    <div style="display: flex; gap: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; margin-bottom: 5px;">
+                        <span style="color: var(--accent-yellow); font-size: 12px; font-weight: 600; cursor: pointer;">Style</span>
+                        <span style="color: var(--text-secondary); font-size: 12px; cursor: pointer;">Coords</span>
+                        <span style="color: var(--text-secondary); font-size: 12px; cursor: pointer;">Vis</span>
+                    </div>
+                    <div class="input-group">
+                        <label>Rows Layout</label>
+                        <select><option>Layout</option></select>
+                    </div>
+                    <div class="input-group">
+                        <label>Number of Rows</label>
+                        <input type="number" value="24">
+                    </div>
+                    <div class="input-group">
+                        <label>Ticks per Row</label>
+                        <input type="number" value="10">
+                    </div>
+                    <div class="input-group">
+                        <label>Row Size</label>
+                        <select><option>Volume</option></select>
+                    </div>
+                    <div class="input-group">
+                        <label>Total Up/Down</label>
+                        <select><option>Value Area</option></select>
+                    </div>
+                    <div class="btn-row">
+                        <button class="btn btn-cancel">Template</button>
+                        <button class="btn btn-cancel">Cancel</button>
+                        <button class="btn btn-ok">Ok</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Right Sidebar: Drawing Tools -->
+        <aside class="sidebar right">
+            <div class="collapsed-icon">✎</div>
+            <div class="sidebar-inner">
+                <div class="sidebar-title">Drawing Tools</div>
+                <div class="indicator-grid">
+                    <button class="ind-btn"><span class="emoji">↖</span> CURSOR</button>
+                    <button class="ind-btn"><span class="emoji">⎯</span> H-LINE</button>
+                    <button class="ind-btn"><span class="emoji">╱</span> TREND</button>
+                    <button class="ind-btn"><span class="emoji">⃞</span> BOX</button>
+                    <button class="ind-btn"><span class="emoji">📈</span> LONG</button>
+                    <button class="ind-btn"><span class="emoji">📉</span> SHORT</button>
+                    <button class="ind-btn"><span class="emoji">ΔP</span> DELTA P</button>
+                    <button class="ind-btn"><span class="emoji">📊</span> VOL P</button>
+                    <button class="ind-btn"><span class="emoji">📊</span> TPO</button>
+                    <button class="ind-btn"><span class="emoji">📊</span> AV</button>
+                    <button class="ind-btn"><span class="emoji">📊</span> A-VWAP</button>
+                    <button class="ind-btn"><span class="emoji">⟲</span> UNDO</button>
+                    <button class="ind-btn"><span class="emoji">🗑️</span> CLEAR</button>
+                </div>
+                
+                <div class="sidebar-title" style="margin-top: 20px;">Settings</div>
+                <div style="display: flex; flex-direction: column; gap: 6px;">
+                    <button class="ind-btn" style="justify-content: center;"><span class="emoji">⠿</span> OPACITY</button>
+                    <button class="ind-btn" style="justify-content: center;"><span class="emoji">⚙️</span> SETTINGS</button>
+                    <button class="ind-btn" style="justify-content: center; color: var(--accent-red); border-color: rgba(246, 70, 93, 0.3);"><span class="emoji">🗑️</span> CLEAR ALL</button>
+                </div>
+            </div>
+        </aside>
+
+    </div>
+
+    <script>
+        // Interactivity
+        document.querySelectorAll('.tf-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        document.querySelectorAll('.speed-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        document.querySelectorAll('.pill').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.pill').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>
